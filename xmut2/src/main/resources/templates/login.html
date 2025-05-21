@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: header('请登录')}"></head>
+<body>
+
+<main class="container" th:insert="~{::content}">
+    <div th:fragment="content">
+        <h1>请登录</h1>
+        <p th:if="${error}" class="error" th:text="${error}">未知错误</p>
+
+        <form action="/login" method="post">
+            <label>校园卡号：</label>
+            <input type="text" name="username" required /><br/><br/>
+
+            <label>密码：</label>
+            <input type="password" name="password" required /><br/><br/>
+
+            <button type="submit" class="btn icon"><i class="fas fa-sign-in-alt"></i> 登录</button>
+        </form>
+    </div>
+</main>
+
+<style>
+    form {
+        background-color: white;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        max-width: 400px;
+        margin: auto;
+    }
+    label {
+        display: block;
+        margin-top: 10px;
+    }
+    input[type="text"], input[type="password"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+    button.btn {
+        margin-top: 15px;
+        width: 100%;
+        padding: 10px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    button.btn:hover {
+        background-color: #0056b3;
+    }
+    .error {
+        color: red;
+        font-weight: bold;
+    }
+</style>
+
+</body>
+</html>

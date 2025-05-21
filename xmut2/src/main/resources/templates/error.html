@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: header('错误')}"></head>
+<body>
+
+<main class="container" th:insert="~{::content}">
+    <div th:fragment="content">
+        <h1>发生错误</h1>
+        <p th:text="'错误信息: ' + ${error}">未知错误</p>
+        <p th:text="'状态码: ' + ${status}">状态码：404</p>
+        <p th:text="'详细信息: ' + ${message}">错误信息</p>
+    </div>
+</main>
+
+</body>
+</html>

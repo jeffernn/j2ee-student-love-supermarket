@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: header('请登录')}"></head>
+<body>
+
+<main class="container" th:insert="~{::content}">
+    <div th:fragment="content">
+        <div class="login-container">
+            <div class="alert alert-danger" th:if="${error}" th:text="${error}">未知错误</div>
+
+            <form action="/login" method="post" class="login-form">
+                <h1 class="form-title">理工爱心超市系统</h1>
+                <p class="form-subtitle">欢迎使用</p>
+                
+                <div class="form-group">
+                    <label for="username" class="form-label"><i class="fas fa-id-card"></i> 校园卡号:</label>
+                    <input type="text" id="username" name="username" placeholder="请输入校园卡号" required class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label"><i class="fas fa-lock"></i> 密码:</label>
+                    <div class="password-input">
+                        <input type="password" id="password" name="password" placeholder="请输入密码" required class="form-control" />
+                        <span class="toggle-password" onclick="togglePassword()">
+                            <i class="fas fa-eye"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-sign-in-alt"></i> 登录
+                </button>
+            </form>
+        </div>
+    </div>
+</main>
+
+<style>
+    /* 隐藏顶部导航栏的主页和登录按钮 */
+    body header nav a[href$="/"] {
+        display: none !important;
+    }
+    
+    body header nav a[href$="/login"] {
+        display: none !important;
+    }
+    
+    /* 可选: 如果使用动态URL，也可以通过类选择器隐藏 */
+    body header nav .nav-link:not(.logout-link),
+    body header nav .btn.primary.icon {
+        display: none !important;
+    }
+    
+    /* ==================== 全局样式 ==================== */
+    body {
+        background-color: #f0f4f8;
+        font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        color: #333;
+        background-image: url('http://img.netbian.com/file/2024/0614/003651lvurh.jpg');
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+    
+    .login-container {
+        max-width: 450px;
+        margin: 50px auto;
+        background-color: rgba(255, 255, 255, 0.6);
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        padding: 0;
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .form-title {
+        color: #2c3e50;
+        margin: 0;
+        padding: 25px 0 5px;
+        font-size: 28px;
+        text-align: center;
+        font-weight: 600;
+        background-color: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+    }
+    
+    .form-subtitle {
+        color: #666;
+        margin: 0 0 20px 0;
+        padding-bottom: 20px;
+        text-align: center;
+        font-size: 15px;
+        background-color: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    
+    .login-form {
+        padding: 20px 35px 30px;
+        background-color: #ffffff;
+    }
+    
+    /* ==================== 表单元素 ==================== */
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .form-label i {
+        margin-right: 8px;
+        color: #2980b9;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+        background-color: #fff;
+        color: #333;
+    }
+    
+    .form-control:focus {
+        border-color: #2980b9;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.2);
+    }
+    
+    .form-control:hover {
+        border-color: #2980b9;
+    }
+    
+    .form-control::placeholder {
+        color: #999;
+    }
+    
+    .password-input {
+        position: relative;
+    }
+    
+    .toggle-password {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #757575;
+        transition: all 0.3s ease;
+    }
+    
+    .toggle-password:hover {
+        color: #2980b9;
+    }
+    
+    /* ==================== 按钮样式 ==================== */
+    .btn-login {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background-color: #2980b9;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 25px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-login:hover {
+        background-color: #1c5980;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-login i {
+        margin-right: 8px;
+    }
+    
+    /* ==================== 提示信息 ==================== */
+    .alert {
+        padding: 15px;
+        margin: 20px 35px 0;
+        border-radius: 8px;
+        font-size: 14px;
+        background-color: #e3f2fd;
+        border-left: 6px solid #2196f3;
+    }
+    
+    .alert-danger {
+        background-color: #fdeeee;
+        color: #d93025;
+        border-left: 6px solid #d93025;
+    }
+    
+    @media (max-width: 480px) {
+        .login-container {
+            margin: 20px 15px;
+            border-radius: 8px;
+        }
+        
+        .login-form {
+            padding: 15px 20px 20px;
+        }
+        
+        .alert {
+            margin: 15px 20px 0;
+        }
+    }
+</style>
+
+<script>
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const icon = document.querySelector('.toggle-password i');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+</script>
+
+</body>
+</html>

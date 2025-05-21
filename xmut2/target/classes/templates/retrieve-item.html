@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: header('取物品')}"></head>
+<body>
+
+<main class="container" th:insert="~{::content}">
+    <div th:fragment="content">
+        <div class="dashboard-container">
+            <div class="panel-header">
+                <h1 class="panel-title">物品取出</h1>
+                <p class="panel-subtitle">理工爱心超市服务系统</p>
+            </div>
+            
+            <div class="panel-content">
+                <!-- 错误信息提示 -->
+                <div th:if="${error}" class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span th:text="${error}"></span>
+                </div>
+                
+                <!-- 分类筛选 -->
+                <div class="section-container">
+                    <h2 class="section-title"><i class="fas fa-filter"></i> 分类筛选</h2>
+                    <form action="/student/retrieve-item" method="get" class="filter-form">
+                        <div class="form-group">
+                            <label for="category" class="form-label">选择分类：</label>
+                            <div class="select-wrapper">
+                                <select id="category" name="category" class="form-control" onchange="this.form.submit()">
+                                    <option value="">全部</option>
+                                    <option th:each="cat : ${categories}"
+                                            th:value="${cat.name}"
+                                            th:text="${cat.name}"
+                                            th:selected="${category == cat.name ? 'selected' : null}">
+                                    </option>
+                                </select>
+                                <i class="fas fa-chevron-down select-arrow"></i>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 物品列表 -->
+                <div class="section-container">
+                    <h2 class="section-title"><i class="fas fa-box"></i> 物品列表</h2>
+                    <div class="table-responsive" th:if="${items != null and items.size() > 0}">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>名称</th>
+                                    <th>类别</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${items}">
+                                    <td th:text="${item.id}"></td>
+                                    <td th:text="${item.name}"></td>
+                                    <td th:text="${item.category}"></td>
+                                    <td>
+                                        <a th:href="@{/student/view-qr-code(qrCode=${item.qrCode}, currentCategory=${category})}"
+                                          class="btn-action">
+                                            <i class="fas fa-qrcode"></i> 查看二维码
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="empty-message" th:if="${#lists.isEmpty(items)}">
+                        <i class="fas fa-info-circle"></i> 暂无符合条件的物品
+                    </div>
+                </div>
+
+                <!-- 二维码显示区域 -->
+                <div class="section-container" th:if="${qrCodeImage}">
+                    <h2 class="section-title"><i class="fas fa-qrcode"></i> 二维码信息</h2>
+                    <div class="qr-code-container">
+                        <img th:src="'data:image/png;base64,' + ${qrCodeImage}" alt="二维码" class="qr-code-image"/>
+                        <p class="qr-code-hint">请使用此二维码进行物品取出操作</p>
+                    </div>
+                </div>
+
+                <!-- 取物表单 -->
+                <div class="section-container">
+                    <h2 class="section-title"><i class="fas fa-barcode"></i> 扫码取物</h2>
+                    <form action="/student/do-retrieve" method="post" class="retrieve-form">
+                        <div class="form-group">
+                            <label for="qrCode" class="form-label">请输入或扫描二维码：</label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-qrcode input-icon"></i>
+                                <input type="text" id="qrCode" name="qrCode" required class="form-control" placeholder="输入二维码内容" />
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-dashboard">
+                            <i class="fas fa-check-circle"></i> 确认取出
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+    /* 隐藏顶部导航栏的主页按钮 */
+    body header nav a[href$="/"] {
+        display: none !important;
+    }
+
+    /* 通过类选择器确保隐藏 */
+    body header nav .nav-link:not(.logout-link) {
+        display: none !important;
+    }
+
+    /* ==================== 全局样式 ==================== */
+    body {
+        background-color: #f0f4f8;
+        font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        color: #333;
+        background-image: url('http://img.netbian.com/file/2024/0614/003651lvurh.jpg');
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+    
+    /* ==================== 仪表板容器 ==================== */
+    .dashboard-container {
+        max-width: 800px;
+        margin: 30px auto;
+        background-color: rgba(255, 255, 255, 0.6);
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        padding: 0;
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    /* ==================== 面板头部 ==================== */
+    .panel-header {
+        padding: 25px 0;
+        text-align: center;
+        background-color: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    
+    .panel-title {
+        color: #2c3e50;
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+    }
+    
+    .panel-subtitle {
+        color: #666;
+        margin: 8px 0 0;
+        font-size: 16px;
+    }
+    
+    /* ==================== 面板内容 ==================== */
+    .panel-content {
+        padding: 30px;
+        background-color: #ffffff;
+    }
+    
+    /* ==================== 区块容器 ==================== */
+    .section-container {
+        margin-bottom: 30px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .section-title {
+        color: #2c3e50;
+        font-size: 18px;
+        margin-top: 0;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .section-title i {
+        margin-right: 8px;
+        color: #2980b9;
+    }
+    
+    /* ==================== 表单元素 ==================== */
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+    
+    .form-control:focus {
+        border-color: #2980b9;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.2);
+    }
+
+    .select-wrapper {
+        position: relative;
+    }
+    
+    .select-arrow {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #888;
+        pointer-events: none;
+    }
+    
+    .input-with-icon {
+        position: relative;
+    }
+    
+    .input-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #888;
+    }
+    
+    .input-with-icon .form-control {
+        padding-left: 45px;
+    }
+    
+    /* ==================== 表格样式 ==================== */
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    
+    .data-table th, 
+    .data-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .data-table th {
+        background-color: #f5f5f5;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .data-table tr:hover {
+        background-color: #f9f9f9;
+    }
+    
+    /* ==================== 按钮样式 ==================== */
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        background-color: #2980b9;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .btn-action:hover {
+        background-color: #1c5980;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-action i {
+        margin-right: 5px;
+    }
+    
+    .btn-dashboard {
+        display: block;
+        width: 100%;
+        padding: 12px 25px;
+        background-color: #2980b9;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-dashboard:hover {
+        background-color: #1c5980;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-dashboard i {
+        margin-right: 8px;
+    }
+    
+    /* ==================== 二维码样式 ==================== */
+    .qr-code-container {
+        text-align: center;
+        padding: 15px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    .qr-code-image {
+        max-width: 200px;
+        border: 1px solid #eee;
+        padding: 10px;
+        background-color: white;
+        border-radius: 4px;
+    }
+    
+    .qr-code-hint {
+        margin-top: 15px;
+        color: #666;
+        font-size: 14px;
+    }
+    
+    /* ==================== 警告信息 ==================== */
+    .alert {
+        padding: 15px;
+        border-radius: 8px;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+    
+    .alert i {
+        margin-right: 8px;
+    }
+    
+    .alert-danger {
+        background-color: #fdeeee;
+        color: #d93025;
+        border-left: 6px solid #d93025;
+    }
+
+    .empty-message {
+        text-align: center;
+        padding: 20px;
+        color: #888;
+        font-style: italic;
+    }
+    
+    .empty-message i {
+        margin-right: 8px;
+        color: #aaa;
+    }
+    
+    /* ==================== 响应式调整 ==================== */
+    @media (max-width: 768px) {
+        .dashboard-container {
+            margin: 20px 15px;
+        }
+        
+        .panel-content {
+            padding: 20px;
+        }
+        
+        .section-container {
+            padding: 15px;
+        }
+        
+        .data-table th, 
+        .data-table td {
+            padding: 8px 10px;
+            font-size: 14px;
+        }
+    }
+</style>
+
+</body>
+</html>
