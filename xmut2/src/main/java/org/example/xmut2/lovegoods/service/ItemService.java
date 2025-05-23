@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -83,17 +86,83 @@ public class ItemService {
         return recordRepository.findByType("TAKE");
     }
 
-    public List<TakeRecord> getTakeRecordsByMonth(String yearMonth) {
-        return recordRepository.findByYearMonth(yearMonth);
+    /**
+     * 根据年月获取取物记录
+     * 使用流式处理代替原来的findByYearMonth方法
+     */
+    public List<TakeRecord> getTakeRecordsByMonth(int year, int month) {
+        return recordRepository.findByType("TAKE").stream()
+                .filter(record -> {
+                    LocalDateTime date = record.getCreatedAt();
+                    return date.getYear() == year && date.getMonthValue() == month;
+                })
+                .collect(Collectors.toList());
     }
-    public Map<String, Integer> getMonthlyTakeRecordCount() {
-        List<TakeRecord> records = takeRecordRepository.findAll();
-
-        return records.stream()
-                .collect(Collectors.groupingBy(
-                        record -> record.getCreatedAt().getMonth().toString(),
-                        Collectors.summingInt(v -> 1)
-                ));
+    
+    /**
+     * 获取按月统计的取物记录数量
+     * @return Map<String, Long> 键为"年份-月份"，值为记录数量
+     */
+    public Map<String, Long> getMonthlyTakeRecordStats() {
+        Map<String, Long> result = new HashMap<>();
+        
+        try {
+            // 获取所有TAKE类型记录
+            List<TakeRecord> records = recordRepository.findByType("TAKE");
+            
+            // 使用Java 8 Stream API进行分组统计
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
+            result = records.stream()
+                    .collect(Collectors.groupingBy(
+                            record -> record.getCreatedAt().format(formatter),
+                            Collectors.counting()
+                    ));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 获取最近12个月的取物记录统计
+     * @return 包含月份标签和记录数量的Map
+     */
+    public Map<String, Object> getRecentMonthlyStats() {
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            // 获取月份标签（最近12个月）
+            List<String> monthLabels = new ArrayList<>();
+            List<Long> recordCounts = new ArrayList<>();
+            
+            LocalDateTime now = LocalDateTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
+            
+            // 准备最近12个月的月份标签
+            for (int i = 11; i >= 0; i--) {
+                LocalDateTime month = now.minusMonths(i);
+                monthLabels.add(month.format(formatter));
+            }
+            
+            // 获取按月统计数据
+            Map<String, Long> monthlyStats = getMonthlyTakeRecordStats();
+            
+            // 组装数据
+            for (String monthLabel : monthLabels) {
+                recordCounts.add(monthlyStats.getOrDefault(monthLabel, 0L));
+            }
+            
+            result.put("labels", monthLabels);
+            result.put("counts", recordCounts);
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 确保至少返回空的数据结构
+            result.put("labels", new ArrayList<>());
+            result.put("counts", new ArrayList<>());
+        }
+        
+        return result;
     }
 
 

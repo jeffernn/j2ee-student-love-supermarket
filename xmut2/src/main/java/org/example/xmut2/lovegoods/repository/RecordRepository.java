@@ -10,9 +10,7 @@ import java.util.List;
 @Repository
 public interface RecordRepository extends JpaRepository<TakeRecord, Long> {
     List<TakeRecord> findByUserIdAndType(Long userId, String type);
-    // 自定义 SQL 查询每月记录
-    @Query(value = "SELECT * FROM record WHERE  type = 'TAKE'", nativeQuery = true)
-    List<TakeRecord> findByYearMonth(String yearMonth);
-
+    
+    // 简单查询所有TAKE类型记录，然后在Java中进行处理
     List<TakeRecord> findByType(String type);
 }

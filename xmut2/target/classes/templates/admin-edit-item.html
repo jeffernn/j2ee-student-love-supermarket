@@ -37,9 +37,15 @@
 
                         <div class="form-group">
                             <label for="category" class="form-label">类别：</label>
-                            <div class="input-with-icon">
-                                <i class="fas fa-folder input-icon"></i>
-                                <input type="text" id="category" th:field="*{category}" class="form-control" required />
+                            <div class="select-wrapper">
+                                <select id="category" th:field="*{category}" class="form-control" required>
+                                    <option value="书籍">书籍</option>
+                                    <option value="其他">其他</option>
+                                    <option value="日用品">日用品</option>
+                                    <option value="电子产品">电子产品</option>
+                                    <option value="衣物">衣物</option>
+                                </select>
+                                <i class="fas fa-chevron-down select-arrow"></i>
                             </div>
                         </div>
 

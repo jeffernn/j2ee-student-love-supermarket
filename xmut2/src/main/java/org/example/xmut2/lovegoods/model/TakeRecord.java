@@ -27,4 +27,40 @@ public class TakeRecord {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+    
+    // toString方法，便于调试
+    @Override
+    public String toString() {
+        return "TakeRecord{" +
+                "id=" + id +
+                ", itemId=" + itemId +
+                ", userId=" + userId +
+                ", type='" + type + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
+    }
+
+    public void setItemId(Long itemId) {
+        this.itemId = itemId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public Long getItemId() {
+        return itemId;
+    }
 }

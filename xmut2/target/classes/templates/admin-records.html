@@ -13,6 +13,66 @@
             </div>
             
             <div class="panel-content">
+                <!-- 数据摘要卡片 -->
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 class="stat-title">总取物记录</h3>
+                            <p class="stat-value" th:text="${totalRecords}">0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 class="stat-title">本月记录</h3>
+                            <p class="stat-value" id="currentMonthCount">-</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 class="stat-title">环比增长</h3>
+                            <p class="stat-value" id="growthRate">-</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 月度统计图表 -->
+                <div class="chart-row">
+                    <div class="section-container chart-section">
+                        <h2 class="section-title"><i class="fas fa-chart-bar"></i> 按月统计取物次数</h2>
+                        
+                        <div class="chart-container">
+                            <canvas id="monthlyStatsChart" width="400" height="200"></canvas>
+                        </div>
+                        
+                        <div class="empty-message" th:if="${monthlyStats == 'null'}">
+                            <i class="fas fa-info-circle"></i> 暂无月份统计
+                        </div>
+                    </div>
+                    
+                    <div class="section-container chart-section">
+                        <h2 class="section-title"><i class="fas fa-chart-pie"></i> 按类别统计</h2>
+                        
+                        <div class="chart-container">
+                            <canvas id="categoryChart" width="400" height="200"></canvas>
+                        </div>
+                        
+                        <div class="empty-message" th:if="${recordsByCategory == 'null'}">
+                            <i class="fas fa-info-circle"></i> 暂无类别统计
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- 取物记录表格 -->
                 <div class="section-container">
                     <h2 class="section-title"><i class="fas fa-list"></i> 所有"取出"记录</h2>
@@ -43,19 +103,6 @@
                         <i class="fas fa-info-circle"></i> 暂无取物记录
                     </div>
                 </div>
-
-                <!-- 月度统计图表 -->
-                <div class="section-container">
-                    <h2 class="section-title"><i class="fas fa-chart-bar"></i> 按月统计取物次数</h2>
-                    
-                    <div class="chart-container">
-                        <canvas id="monthlyStatsChart" width="400" height="200"></canvas>
-                    </div>
-                    
-                    <div class="empty-message" th:if="${#lists.isEmpty(monthlyStats)}">
-                        <i class="fas fa-info-circle"></i> 暂无月份统计
-                    </div>
-                </div>
                 
                 <!-- 操作按钮 -->
                 <div class="action-buttons">
@@ -69,71 +116,259 @@
         <!-- 引入 Chart.js -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        <!-- 渲染图表 -->
+        <!-- 存储数据的脚本块 -->
         <script th:inline="javascript">
             /*<![CDATA[*/
+            // 直接将数据暴露给全局变量，避免Thymeleaf解析问题
+            var monthlyStatsData = /*[[${monthlyStats}]]*/ '{"2023-01":5,"2023-02":8}';
+            var categoryStatsData = /*[[${recordsByCategory}]]*/ '{"书籍":15,"其他":3}';
+            /*]]>*/
+        </script>
+
+        <!-- 渲染图表 -->
+        <script>
             document.addEventListener('DOMContentLoaded', function () {
-                const ctx = document.getElementById('monthlyStatsChart').getContext('2d');
-
-                // 获取 Thymeleaf 注入的 JSON 字符串
-                const monthlyStatsJson = /*[(${monthlyStats})]*/ 'null';
-                const monthlyStats = monthlyStatsJson !== 'null' ? JSON.parse(monthlyStatsJson) : {};
-
-                if (Object.keys(monthlyStats).length === 0) {
-                    document.getElementById('monthlyStatsChart').style.display = 'none';
-                    return;
-                }
-
-                const labels = Object.keys(monthlyStats);
-                const data = Object.values(monthlyStats);
-
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: '每月取物次数',
-                            data: data,
-                            backgroundColor: '#2980b9'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { display: false },
-                            title: {
-                                display: true,
-                                text: '每月取物次数统计',
-                                color: '#2c3e50',
-                                font: {
-                                    size: 16,
-                                    weight: 'bold'
-                                }
-                            }
+                console.log('页面加载完成，开始初始化图表...');
+                
+                // 初始化图表
+                initMonthlyChart();
+                initCategoryChart();
+            });
+            
+            // 初始化月度统计图表
+            function initMonthlyChart() {
+                try {
+                    console.log('初始化月度统计图表...');
+                    
+                    // 使用全局变量中的数据
+                    console.log('月度统计数据(原始字符串):', monthlyStatsData);
+                    
+                    // 检查数据是否存在
+                    if (!monthlyStatsData || monthlyStatsData === 'null') {
+                        console.warn('月度统计数据为空');
+                        document.getElementById('monthlyStatsChart').closest('.chart-container').innerHTML = 
+                            '<div class="empty-message"><i class="fas fa-info-circle"></i> 暂无月份统计数据</div>';
+                        return;
+                    }
+                    
+                    // 解析JSON
+                    const monthlyData = JSON.parse(monthlyStatsData);
+                    console.log('解析后的月度数据:', monthlyData);
+                    
+                    // 提取标签和数据
+                    const labels = Object.keys(monthlyData);
+                    const counts = Object.values(monthlyData);
+                    
+                    console.log('月份标签:', labels);
+                    console.log('月份数据:', counts);
+                    
+                    // 如果没有数据，显示提示信息
+                    if (labels.length === 0) {
+                        document.getElementById('monthlyStatsChart').closest('.chart-container').innerHTML = 
+                            '<div class="empty-message"><i class="fas fa-info-circle"></i> 暂无月份统计数据</div>';
+                        return;
+                    }
+                    
+                    // 更新统计卡片
+                    if (labels.length > 0 && counts.length > 0) {
+                        updateStatsCards(labels, counts);
+                    }
+                    
+                    // 渲染图表
+                    const ctx = document.getElementById('monthlyStatsChart').getContext('2d');
+                    
+                    // 生成渐变背景色
+                    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                    gradient.addColorStop(0, 'rgba(41, 128, 185, 0.8)');
+                    gradient.addColorStop(1, 'rgba(41, 128, 185, 0.1)');
+                    
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: '每月取物次数',
+                                data: counts,
+                                backgroundColor: gradient,
+                                borderColor: '#2980b9',
+                                borderWidth: 2,
+                                pointBackgroundColor: '#2980b9',
+                                pointBorderColor: '#fff',
+                                pointRadius: 4,
+                                tension: 0.3,
+                                fill: true
+                            }]
                         },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: {
-                                    color: 'rgba(0, 0, 0, 0.05)'
-                                },
-                                ticks: {
-                                    color: '#666'
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                    titleColor: '#fff',
+                                    bodyColor: '#fff',
+                                    bodyFont: { size: 14 },
+                                    padding: 10,
+                                    displayColors: false
                                 }
                             },
-                            x: {
-                                grid: {
-                                    display: false
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        color: 'rgba(0, 0, 0, 0.05)'
+                                    },
+                                    ticks: {
+                                        color: '#666',
+                                        precision: 0
+                                    }
                                 },
-                                ticks: {
-                                    color: '#666'
+                                x: {
+                                    grid: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        color: '#666'
+                                    }
                                 }
                             }
                         }
+                    });
+                    console.log('月度图表渲染完成');
+                } catch (error) {
+                    console.error('渲染月度图表出错:', error);
+                    document.getElementById('monthlyStatsChart').closest('.chart-container').innerHTML = 
+                        '<div class="empty-message"><i class="fas fa-exclamation-circle"></i> 图表数据加载错误: ' + error.message + '</div>';
+                }
+            }
+            
+            // 初始化类别统计图表
+            function initCategoryChart() {
+                try {
+                    console.log('初始化类别统计图表...');
+                    
+                    // 使用全局变量中的数据
+                    console.log('类别统计数据(原始字符串):', categoryStatsData);
+                    
+                    if (!categoryStatsData || categoryStatsData === 'null') {
+                        console.warn('类别统计数据为空');
+                        document.getElementById('categoryChart').closest('.chart-container').innerHTML = 
+                            '<div class="empty-message"><i class="fas fa-info-circle"></i> 暂无类别统计数据</div>';
+                        return;
                     }
-                });
-            });
-            /*]]>*/
+                    
+                    // 解析JSON
+                    const categoryData = JSON.parse(categoryStatsData);
+                    console.log('解析后的类别数据:', categoryData);
+                    
+                    // 提取标签和数据
+                    const labels = Object.keys(categoryData);
+                    const data = Object.values(categoryData);
+                    
+                    console.log('类别标签:', labels);
+                    console.log('类别数据:', data);
+                    
+                    if (labels.length === 0) {
+                        document.getElementById('categoryChart').closest('.chart-container').innerHTML = 
+                            '<div class="empty-message"><i class="fas fa-info-circle"></i> 暂无类别统计数据</div>';
+                        return;
+                    }
+                    
+                    // 生成不同的颜色
+                    const backgroundColors = [
+                        '#3498db', '#2ecc71', '#f1c40f', '#e74c3c', '#9b59b6',
+                        '#1abc9c', '#d35400', '#34495e', '#16a085', '#c0392b'
+                    ];
+                    
+                    // 渲染图表
+                    const ctx = document.getElementById('categoryChart').getContext('2d');
+                    
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: data,
+                                backgroundColor: backgroundColors.slice(0, labels.length),
+                                borderColor: '#fff',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { 
+                                    position: 'right',
+                                    labels: {
+                                        font: { size: 12 },
+                                        padding: 15
+                                    }
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                    titleColor: '#fff',
+                                    bodyColor: '#fff',
+                                    bodyFont: { size: 14 },
+                                    padding: 10
+                                }
+                            }
+                        }
+                    });
+                    console.log('类别图表渲染完成');
+                } catch (error) {
+                    console.error('渲染类别图表出错:', error);
+                    document.getElementById('categoryChart').closest('.chart-container').innerHTML = 
+                        '<div class="empty-message"><i class="fas fa-exclamation-circle"></i> 图表数据加载错误: ' + error.message + '</div>';
+                }
+            }
+            
+            // 更新统计卡片
+            function updateStatsCards(labels, counts) {
+                try {
+                    // 确保数据有效
+                    if (!labels || !counts || labels.length === 0 || counts.length === 0) {
+                        document.getElementById('currentMonthCount').textContent = '0';
+                        document.getElementById('growthRate').textContent = '-';
+                        return;
+                    }
+                    
+                    // 获取当前月份和前一个月的数据
+                    const currentMonthIndex = labels.length - 1;
+                    const currentMonthValue = parseInt(counts[currentMonthIndex] || 0);
+                    const prevMonthIndex = currentMonthIndex > 0 ? currentMonthIndex - 1 : 0;
+                    const prevMonthValue = parseInt(counts[prevMonthIndex] || 0);
+                    
+                    // 更新当月记录数
+                    document.getElementById('currentMonthCount').textContent = currentMonthValue;
+                    
+                    // 计算环比增长率
+                    const growthElement = document.getElementById('growthRate');
+                    if (prevMonthValue > 0 && currentMonthIndex > 0) {
+                        const growthRate = ((currentMonthValue - prevMonthValue) / prevMonthValue * 100).toFixed(1);
+                        
+                        if (parseFloat(growthRate) > 0) {
+                            growthElement.textContent = '+' + growthRate + '%';
+                            growthElement.style.color = '#2ecc71';
+                        } else if (parseFloat(growthRate) < 0) {
+                            growthElement.textContent = growthRate + '%';
+                            growthElement.style.color = '#e74c3c';
+                        } else {
+                            growthElement.textContent = '0%';
+                            growthElement.style.color = '#7f8c8d';
+                        }
+                    } else if (currentMonthValue > 0 && (prevMonthValue === 0 || currentMonthIndex === 0)) {
+                        growthElement.textContent = '新增';
+                        growthElement.style.color = '#2ecc71';
+                    } else {
+                        growthElement.textContent = '-';
+                        growthElement.style.color = '#7f8c8d';
+                    }
+                } catch (error) {
+                    console.error('更新统计卡片出错:', error);
+                    document.getElementById('currentMonthCount').textContent = '-';
+                    document.getElementById('growthRate').textContent = '-';
+                }
+            }
         </script>
     </div>
 </main>
@@ -166,7 +401,7 @@
     
     /* ==================== 仪表板容器 ==================== */
     .dashboard-container {
-        max-width: 900px;
+        max-width: 1100px;
         margin: 30px auto;
         background-color: rgba(255, 255, 255, 0.6);
         border-radius: 12px;
@@ -205,6 +440,73 @@
     .panel-content {
         padding: 30px;
         background-color: #ffffff;
+    }
+    
+    /* ==================== 统计卡片 ==================== */
+    .stats-cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        flex: 1;
+        min-width: 200px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #2980b9;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+    
+    .stat-icon i {
+        font-size: 24px;
+    }
+    
+    .stat-content {
+        flex-grow: 1;
+    }
+    
+    .stat-title {
+        margin: 0 0 5px;
+        font-size: 16px;
+        color: #666;
+        font-weight: 500;
+    }
+    
+    .stat-value {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    /* ==================== 图表布局 ==================== */
+    .chart-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .chart-section {
+        flex: 1;
+        min-width: 300px;
     }
     
     /* ==================== 区块容器 ==================== */
@@ -338,7 +640,16 @@
             font-size: 14px;
         }
         
-        canvas#monthlyStatsChart {
+        .stats-cards {
+            flex-direction: column;
+        }
+        
+        .chart-row {
+            flex-direction: column;
+        }
+        
+        canvas#monthlyStatsChart, 
+        canvas#categoryChart {
             height: 200px !important;
         }
     }
