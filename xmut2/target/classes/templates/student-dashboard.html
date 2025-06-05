@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: header('学生仪表板')}"></head>
+<body>
+
+<main class="container" th:insert="~{::content}">
+    <div th:fragment="content">
+        <div class="dashboard-container">
+            <div class="panel-header">
+                <h1 class="panel-title">学生仪表板</h1>
+                <p class="panel-subtitle">理工爱心超市服务系统</p>
+            </div>
+            
+            <div class="panel-content">
+                <div class="section-container">
+                    <h2 class="section-title"><i class="fas fa-user-circle"></i> 用户信息</h2>
+                    <div class="user-info-panel" th:if="${#authentication != null}">
+                        <div class="info-item">
+                            <span class="info-label">用户名:</span>
+                            <span class="info-value" th:text="${#authentication.principal.username}"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">角色:</span>
+                            <span class="info-value" th:text="${#authentication.principal.authorities}"></span>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning" th:unless="${#authentication != null}">
+                        <i class="fas fa-exclamation-circle"></i> 未登录
+                        <p>请先登录以查看权限信息</p>
+                    </div>
+                </div>
+
+                <div class="section-container">
+                    <h2 class="section-title"><i class="fas fa-tasks"></i> 可用操作</h2>
+                    <div class="action-buttons">
+                        <a href="/student/store-item" class="btn-dashboard">
+                            <i class="fas fa-box-open"></i> 存物品
+                        </a>
+                        <a href="/student/retrieve-item" class="btn-dashboard">
+                            <i class="fas fa-qrcode"></i> 取物品
+                        </a>
+                        <a href="/ai/chat" class="btn-dashboard">
+                            <i class="fas fa-robot"></i> AI智能助手
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+    /* 隐藏顶部导航栏的主页按钮 */
+    body header nav a[href$="/"] {
+        display: none !important;
+    }
+
+    /* 通过类选择器确保隐藏 */
+    body header nav .nav-link:not(.logout-link) {
+        display: none !important;
+    }
+
+    /* ==================== 全局样式 ==================== */
+    body {
+        background-color: #f0f4f8;
+        font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        color: #333;
+        background-image: url('http://img.netbian.com/file/2024/0614/003651lvurh.jpg');
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+    
+    /* ==================== 仪表板容器 ==================== */
+    .dashboard-container {
+        max-width: 800px;
+        margin: 30px auto;
+        background-color: rgba(255, 255, 255, 0.6);
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        padding: 0;
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    /* ==================== 面板头部 ==================== */
+    .panel-header {
+        padding: 25px 0;
+        text-align: center;
+        background-color: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    
+    .panel-title {
+        color: #2c3e50;
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+    }
+    
+    .panel-subtitle {
+        color: #666;
+        margin: 8px 0 0;
+        font-size: 16px;
+    }
+    
+    /* ==================== 面板内容 ==================== */
+    .panel-content {
+        padding: 30px;
+        background-color: #ffffff;
+    }
+    
+    /* ==================== 区块容器 ==================== */
+    .section-container {
+        margin-bottom: 30px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .section-title {
+        color: #2c3e50;
+        font-size: 18px;
+        margin-top: 0;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .section-title i {
+        margin-right: 8px;
+        color: #2980b9;
+    }
+    
+    /* ==================== 用户信息面板 ==================== */
+    .user-info-panel {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    .info-item {
+        display: flex;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #555;
+        width: 80px;
+        flex-shrink: 0;
+    }
+    
+    .info-value {
+        color: #333;
+        flex-grow: 1;
+    }
+    
+    /* ==================== 警告信息 ==================== */
+    .alert {
+        padding: 15px;
+        border-radius: 8px;
+        font-size: 14px;
+        margin-top: 10px;
+    }
+    
+    .alert i {
+        margin-right: 8px;
+    }
+    
+    .alert-warning {
+        background-color: #fef9e7;
+        color: #8a6d3b;
+        border-left: 6px solid #f1c40f;
+    }
+    
+    /* ==================== 按钮样式 ==================== */
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .btn-dashboard {
+        display: inline-flex;
+        align-items: center;
+        padding: 12px 25px;
+        background-color: #2980b9;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        flex: 1;
+        justify-content: center;
+        min-width: 180px;
+    }
+    
+    .btn-dashboard:hover {
+        background-color: #1c5980;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-dashboard i {
+        margin-right: 8px;
+        font-size: 18px;
+    }
+    
+    /* ==================== 响应式调整 ==================== */
+    @media (max-width: 768px) {
+        .dashboard-container {
+            margin: 20px 15px;
+        }
+        
+        .panel-content {
+            padding: 20px;
+        }
+        
+        .section-container {
+            padding: 15px;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+
+</body>
+</html>
